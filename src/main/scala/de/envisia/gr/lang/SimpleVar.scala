@@ -10,7 +10,7 @@ sealed trait SimpleVar {
     op match {
       case Comparator.Eq => left == right
       case Comparator.NotEq => left != right
-      case Comparator.Lt => left == right
+      case Comparator.Lt => left < right
       case Comparator.LtE => left <= right
       case Comparator.Gt => left > right
       case Comparator.GtE => left >= right
