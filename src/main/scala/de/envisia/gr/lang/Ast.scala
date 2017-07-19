@@ -1,27 +1,23 @@
 package de.envisia.gr.lang
 
-object Ast {
+private[lang] object Ast {
 
   case class Identifier(name: String)
   type string = String
-
-  sealed trait Statement
-  object Statement {
-    // case class If(test: Expr, body: Seq[Statement], orelse: Seq[Statement]) extends Statement
-    case class StatementExpr(value: Expr) extends Statement
-
-    case class Name(id: Identifier, ctx: Unit) extends Expr
-  }
+  type bool = Boolean
 
   sealed trait Expr
+  sealed trait FuncArg extends Expr
   object Expr {
     case class BoolOp(op: Ast.BoolOp, values: Seq[Expr]) extends Expr
     case class UnaryOp(op: Ast.UnaryOp, operand: Expr) extends Expr
     case class Compare(left: Expr, op: Comparator, comparator: Expr) extends Expr
 
-    case class Num(n: Any) extends Expr // a number as a PyObject.
-    case class Str(s: string) extends Expr // need to raw: specify, unicode, etc?
-    case class Name(id: Identifier, ctx: Unit) extends Expr
+    case class Num(n: Any) extends FuncArg
+    case class Str(s: string) extends FuncArg
+    case class Name(id: Identifier, ctx: Unit) extends FuncArg
+    case class Boolean(value: bool) extends FuncArg
+    case object Null extends FuncArg
   }
 
   sealed trait UnaryOp
@@ -44,6 +40,5 @@ object Ast {
     case object Gt extends Comparator
     case object GtE extends Comparator
   }
-
 
 }

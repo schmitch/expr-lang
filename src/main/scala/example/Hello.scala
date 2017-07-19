@@ -1,70 +1,36 @@
 package example
 
-import de.envisia.gr.lang.SimpleVar.{ SimpleBoolean, SimpleNumber, SimpleString }
-import org.parboiled2._
-
-import scala.util.{ Failure, Success }
+import de.envisia.gr.lang.GrLangInterpreter
+import de.envisia.gr.lang.SimpleVar.{ SimpleNumber, SimpleString }
 
 object Hello {
 
-  private def parse(s: String) = {
-    println("=====================================")
-    val parser = new SimpleParser(s)
-    parser.InputLine.run() match {
-      case Success(expr) ⇒ println(s"Expression is valid: $expr")
-      case Failure(e: ParseError) ⇒ println("Expression is not valid: " + parser.formatError(e, new ErrorFormatter(showPosition= false)))
-      case Failure(e) ⇒ println("Unexpected error during parsing run: ", e)
-    }
-    println("-------------------------------------")
-  }
-
   def main(args: Array[String]): Unit = {
 
-    // """not hello == != "12""""
     val lookupMap = Map(
-      // special values
-      "TRUE" -> SimpleBoolean(true),
-      "FALSE" -> SimpleBoolean(false),
-
       // other
       "hase" -> SimpleString("q"),
       "demo" -> SimpleString("abc"),
       "bla" -> SimpleNumber(1),
-      "x" -> SimpleNumber(2)
+      "x" -> SimpleNumber(2),
+      "q" -> SimpleNumber(4)
     )
 
-    //    val compiler = new GrLangCompiler(lookupMap)
-    //    for (_ <- 1 to 100) {
-    //      val start = System.nanoTime()
-    //      compiler.compile( """NOT hello == != """)
-    //
-    //      compiler.compile( """12 > 50""")
-    //
-    //      compiler.compile( """NOT hase =="12" AND (demo != hase OR 1 == bla)""") // UnaryOp(Not,Compare(Name(Identifier(hase),()),Eq,Str(12)))
-    //
-    //      compiler.compile( """1 == 1 AND 1 == 2 AND 3 == 4""")
-    //
-    //      compiler.compile( """1 == 1 AND (1 == 2 AND 3 == 4)""")
-    //
-    //      compiler.compile("x < 4 == FALSE")
-    //      compiler.compile("(x < 4) == TRUE")
-    //
-    //      println(s"Time ${System.nanoTime() - start}ns")
-    //    }
+    val compiler = new GrLangInterpreter(lookupMap)
 
-    parse("12 > 50")
+    println("1:" + compiler.compile("12 < 50"))
 
-    parse( """"hase" == "bla"""")
-    parse( """hase == "bla"""")
-    parse( """hase demo == "bla"""")
-    parse( """and == "bla"""")
-    parse( """== == "bla"""")
+    println("2:" + compiler.compile( """   "hase" == "hase"   """))
+    println("3:" + compiler.compile( """ hase == "bla"  """))
+    println("4:" + compiler.compile( """hase demo == "bla""""))
+    println("5:" + compiler.compile( """and == "bla""""))
+    println("6:" + compiler.compile( """== == "bla""""))
 
-    parse("""  not    demo    ==    3   """)
-    parse("""not hase == "12" and (demo != hase or 1 == bla) """)
-    parse("""not hase == "12"and (demo != hase or 1 == bla)""")
+    println("7:" + compiler.compile( """  not    q    ==    3   """))
+    println("8:" + compiler.compile( """not hase == "12" and (demo != hase or 1 == bla) """))
+    println("9:" + compiler.compile( """not hase == "12"and (demo != hase or 1 == bla)"""))
 
-    parse("""12 < 50 and 50 < 100""")
+    println("10:" + compiler.compile( """12 < 50 and 50 < 100"""))
   }
 
 }

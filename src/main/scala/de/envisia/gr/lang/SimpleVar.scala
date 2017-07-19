@@ -1,76 +1,37 @@
 package de.envisia.gr.lang
 
+import de.envisia.gr.lang.Ast.Comparator
 
 sealed trait SimpleVar {
+
   import SimpleVar._
 
-  private def checkNumber(that: SimpleVar): BigDecimal = {
+  private def stringComp(left: String, op: Comparator, right: String): Boolean = {
+    op match {
+      case Comparator.Eq => left == right
+      case Comparator.NotEq => left != right
+      case Comparator.Lt => left == right
+      case Comparator.LtE => left <= right
+      case Comparator.Gt => left > right
+      case Comparator.GtE => left >= right
+    }
+  }
+
+  private def castCompareString(s: String, op: Comparator, that: SimpleVar): Boolean = {
     that match {
-      case SimpleNumber(n) => n
-      case _ => throw new IllegalStateException(s"impossible to compare Number with ${that}")
+      case SimpleNumber(n) => stringComp(s, op, n.toString())
+      case SimpleBoolean(b) => stringComp(s, op, b.toString)
+      case SimpleString(other) => stringComp(s, op, other.toString)
+      case SimpleNull => stringComp(s, op, "")
     }
   }
 
-  private def checkString(that: SimpleVar): String = {
-    that match {
-      case SimpleString(s) => s
-      case _ => throw new IllegalStateException(s"impossible to compare String with ${that}")
-    }
-  }
-
-  private def checkBoolean(that: SimpleVar): Boolean = {
-    that match {
-      case SimpleBoolean(b) => b
-      case _ => throw new IllegalStateException(s"impossible to compare Boolean with ${that}")
-    }
-  }
-
-  def ==(that: SimpleVar): Boolean = {
+  private[lang] def compare(op: Comparator, that: SimpleVar): Boolean = {
     this match {
-      case SimpleNumber(n) => n == checkNumber(that)
-      case SimpleString(s) => s == checkString(that)
-      case SimpleBoolean(b) => b == checkBoolean(that)
-    }
-  }
-
-  def !=(that: SimpleVar): Boolean = {
-    this match {
-      case SimpleNumber(n) => n != checkNumber(that)
-      case SimpleString(s) => s != checkString(that)
-      case SimpleBoolean(b) =>  b == checkBoolean(that)
-    }
-  }
-
-  def >(that: SimpleVar): Boolean = {
-    this match {
-      case SimpleNumber(n) => n > checkNumber(that)
-      case SimpleString(_) => throw new IllegalStateException(s"String does not have a implementation of >")
-      case SimpleBoolean(_) => throw new IllegalStateException(s"can't compare Boolean with ${that}")
-    }
-  }
-
-  def <(that: SimpleVar): Boolean = {
-    this match {
-      case SimpleNumber(n) => n < checkNumber(that)
-      case SimpleString(_) => throw new IllegalStateException(s"String does not have a implementation of <")
-      case SimpleBoolean(_) => throw new IllegalStateException(s"can't compare Boolean with ${that}")
-    }
-  }
-
-  def <=(that: SimpleVar): Boolean = {
-    this match {
-      case SimpleNumber(n) => n <= checkNumber(that)
-      case SimpleString(_) => throw new IllegalStateException(s"String does not have a implementation of <=")
-      case SimpleBoolean(_) => throw new IllegalStateException(s"can't compare Boolean with ${that}")
-    }
-  }
-
-
-  def >=(that: SimpleVar): Boolean = {
-    this match {
-      case SimpleNumber(n) => n >= checkNumber(that)
-      case SimpleString(_) => throw new IllegalStateException(s"String does not have a implementation of >=")
-      case SimpleBoolean(_) => throw new IllegalStateException(s"can't compare Boolean with ${that}")
+      case SimpleString(s) => castCompareString(s, op, that)
+      case SimpleNumber(n) => castCompareString(n.toString(), op, that)
+      case SimpleBoolean(b) => castCompareString(b.toString, op, that)
+      case SimpleNull => castCompareString("", op, that)
     }
   }
 
@@ -81,5 +42,6 @@ object SimpleVar {
   case class SimpleString(s: String) extends SimpleVar
   case class SimpleNumber(n: BigDecimal) extends SimpleVar
   case class SimpleBoolean(b: Boolean) extends SimpleVar
+  case object SimpleNull extends SimpleVar
 
 }

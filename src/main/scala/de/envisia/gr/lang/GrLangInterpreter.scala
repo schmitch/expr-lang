@@ -1,17 +1,15 @@
-package example
+package de.envisia.gr.lang
 
-import de.envisia.gr.lang.{ Ast, Expressions, SimpleVar }
-import fastparse.core.Parsed
 import org.parboiled2.{ ErrorFormatter, ParseError }
 
-import scala.util.{ Failure, Success }
 import scala.util.control.TailCalls._
+import scala.util.{ Failure, Success, Try }
 
-class GrLangCompiler(lookupMap: Map[String, SimpleVar]) {
+class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
 
   import Ast._
 
-  private def lookup(name: Identifier): SimpleVar = {
+  private def lookupVar(name: Identifier): SimpleVar = {
     lookupMap.getOrElse(name.name, throw new IllegalArgumentException(s"invalid variable ${name.name}"))
   }
 
@@ -25,21 +23,15 @@ class GrLangCompiler(lookupMap: Map[String, SimpleVar]) {
   private def compare(left: Expr, op: Comparator, right: Expr): Boolean = {
     val leftVar = compareResolve(left)
     val rightVar = compareResolve(right)
-    op match {
-      case Comparator.Eq => leftVar == rightVar
-      case Comparator.NotEq => leftVar != rightVar
-      case Comparator.Lt => leftVar < rightVar
-      case Comparator.LtE => leftVar <= rightVar
-      case Comparator.Gt => leftVar > rightVar
-      case Comparator.GtE => leftVar >= rightVar
-    }
+    leftVar.compare(op, rightVar)
   }
 
   private def compareResolve(any: Ast.Expr): SimpleVar = {
     any match {
       case Expr.Num(anyNum) => SimpleVar.SimpleNumber(BigDecimal(anyNum.toString))
       case Expr.Str(name) => SimpleVar.SimpleString(name)
-      case Expr.Name(identifier, _) => lookup(identifier)
+      case Expr.Boolean(value) => SimpleVar.SimpleBoolean(value)
+      case Expr.Name(identifier, _) => lookupVar(identifier)
       case Expr.Compare(left, op, right) => SimpleVar.SimpleBoolean(compare(left, op, right))
       case _ => throw new IllegalStateException("we do not allow inner expressions in a comparsion")
     }
@@ -72,7 +64,8 @@ class GrLangCompiler(lookupMap: Map[String, SimpleVar]) {
   private def resolve(e: Ast.Expr): TailRec[Boolean] = {
     e match {
       case Expr.Compare(left, op, right) => done(compare(left, op, right))
-      case Expr.Name(identifier, _) => done(simpleVarBool(lookup(identifier)))
+      case Expr.Name(identifier, _) => done(simpleVarBool(lookupVar(identifier)))
+      case Expr.Boolean(value) => done(value)
       case Expr.BoolOp(op, values) => boolOp(op, values)
       case Expr.UnaryOp(op, value) => unary(op, value)
       case Expr.Num(_) => throwIllegalComparsion
@@ -80,13 +73,12 @@ class GrLangCompiler(lookupMap: Map[String, SimpleVar]) {
     }
   }
 
-  def compile(s: String): Boolean = {
-    val parser = new SimpleParser(s)
+  def compile(s: String): Try[Boolean] = {
+    val parser = new GrParser(s)
     parser.InputLine.run() match {
-      case Success(expr) ⇒
-        resolve(expr).result
-      case Failure(e: ParseError) ⇒ println("Expression is not valid: " + parser.formatError(e, new ErrorFormatter(showPosition= false)))
-      case Failure(e) ⇒ println("Unexpected error during parsing run: ", e)
+      case Success(expr) ⇒ Try(resolve(expr).result)
+      case Failure(e: ParseError) ⇒ Failure(new Exception("Expression is not valid: " + parser.formatError(e, new ErrorFormatter(showPosition = false))))
+      case Failure(e) ⇒ Failure(new Exception("Unexpected error during parsing run: ", e))
     }
 
   }
