@@ -24,7 +24,7 @@ private[lang] class GrParser(val input: ParserInput) extends Parser with StringB
 
   // Identifier
   private def Keywords = rule { capture(atomic("and" | "or" | "not" | "true" | "false" | "null")) }
-  private def KeywordFailure = rule { Keywords }
+  private def KeywordFailure = rule { Keywords /* FIXME error message should say that it was a keyword at the right position:  ~ fail("used a keyword instead of a Variable, Number or Boolean") */ }
   private def IdentifierBase = rule { capture(oneOrMore(Alpha ++ '_') ~ zeroOrMore(Alpha ++ Digit ++ '_')) }
   private def Identifier = rule {
       // IdentifierBase ~> (s => test(!keywordList.contains(s)) ~ push(Expr.Name(EID(s), ())))
