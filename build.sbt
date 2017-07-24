@@ -27,7 +27,7 @@ lazy val `erp-dsl` = (project in file("."))
     )
 
 
-releaseCrossBuild := true,
+releaseCrossBuild := true
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
