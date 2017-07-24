@@ -75,6 +75,7 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
       // these can't happen, since the compiler forbids them:
       case Expr.Boolean(value) => done(value)
       case Expr.Name(identifier, _) => done(simpleVarBool(lookupVar(identifier)))
+      case Expr.Null => throwIllegalComparsion
       case Expr.Num(_) => throwIllegalComparsion
       case Expr.Str(_) => throwIllegalComparsion
     }
