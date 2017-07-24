@@ -13,6 +13,7 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
     // lookup a var in our lookup map,
     // if it is not found we simple return a "null" instance
     // (i.e. undefined and null are equal in our dsl)
+    // FIXME: maybe we can still warn the user for undefined variables
     lookupMap.getOrElse(name.name, SimpleVar.SimpleNull)
   }
 
@@ -36,6 +37,7 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
       case Expr.Str(name) => SimpleVar.SimpleString(name)
       case Expr.Boolean(value) => SimpleVar.SimpleBoolean(value)
       case Expr.Name(identifier, _) => lookupVar(identifier)
+      // might not happen:
       case Expr.Compare(left, op, right) => SimpleVar.SimpleBoolean(compare(left, op, right))
       case _ => throw new IllegalStateException("we do not allow inner expressions in a comparsion")
     }
@@ -68,10 +70,11 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
   private def resolve(e: Ast.Expr): TailRec[Boolean] = {
     e match {
       case Expr.Compare(left, op, right) => done(compare(left, op, right))
-      case Expr.Name(identifier, _) => done(simpleVarBool(lookupVar(identifier)))
-      case Expr.Boolean(value) => done(value)
       case Expr.BoolOp(op, values) => boolOp(op, values)
       case Expr.UnaryOp(op, value) => unary(op, value)
+      // these can't happen, since the compiler forbids them:
+      case Expr.Boolean(value) => done(value)
+      case Expr.Name(identifier, _) => done(simpleVarBool(lookupVar(identifier)))
       case Expr.Num(_) => throwIllegalComparsion
       case Expr.Str(_) => throwIllegalComparsion
     }

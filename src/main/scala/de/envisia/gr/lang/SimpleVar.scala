@@ -6,26 +6,39 @@ sealed trait SimpleVar {
 
   import SimpleVar._
 
-  private def filterNull(s: String): String = {
+  private def filterNull(v: SimpleVar): SimpleVar = {
     // our dsl will actually interpret -, 0 and empty strings as the same "null" value
     // this makes it easy for us to compare things against our runtime data
-    s match {
-      case "-" => ""
-      case "0" => ""
-      case _ => s
+    v match {
+      case SimpleString(s) => s match {
+        case "-" => SimpleVar.SimpleNull
+        case "0" => SimpleVar.SimpleNull
+        case _ => v
+      }
+      case SimpleNumber(n) => if (n == BigDecimal(0)) SimpleVar.SimpleNull else v
+      case _ => v
     }
   }
 
   private def stringComp(left: String, op: Comparator, right: String): Boolean = {
-    val leftChecked = filterNull(left)
-    val rightChecked = filterNull(right)
     op match {
-      case Comparator.Eq => leftChecked == rightChecked
-      case Comparator.NotEq => leftChecked != rightChecked
-      case Comparator.Lt => leftChecked < rightChecked
-      case Comparator.LtE => leftChecked <= rightChecked
-      case Comparator.Gt => leftChecked > rightChecked
-      case Comparator.GtE => leftChecked >= rightChecked
+      case Comparator.Eq => left == right
+      case Comparator.NotEq => left != right
+      case Comparator.Lt => left < right
+      case Comparator.LtE => left <= right
+      case Comparator.Gt => left > right
+      case Comparator.GtE => left >= right
+    }
+  }
+
+  private def numberComp(left: BigDecimal, op: Comparator, right: BigDecimal): Boolean = {
+    op match {
+      case Comparator.Eq => left == right
+      case Comparator.NotEq => left != right
+      case Comparator.Lt => left < right
+      case Comparator.LtE => left <= right
+      case Comparator.Gt => left > right
+      case Comparator.GtE => left >= right
     }
   }
 
@@ -39,11 +52,19 @@ sealed trait SimpleVar {
   }
 
   private[lang] def compare(op: Comparator, that: SimpleVar): Boolean = {
-    this match {
-      case SimpleString(s) => castCompareString(s, op, that)
-      case SimpleNumber(n) => castCompareString(n.toString(), op, that)
-      case SimpleBoolean(b) => castCompareString(b.toString, op, that)
-      case SimpleNull => castCompareString("", op, that)
+    val filteredThis = filterNull(this)
+    val filteredThat = filterNull(that)
+
+    filteredThis match {
+      // if we have two numbers, we should compare them correctly as a number
+      // else we would get wrong values for strings that have more affixes/postfixes
+      case SimpleNumber(n) => filteredThat match {
+        case SimpleNumber(other) => numberComp(n, op, other)
+        case _ => castCompareString(n.toString(), op, filteredThat)
+      }
+      case SimpleString(s) => castCompareString(s, op, filteredThat)
+      case SimpleBoolean(b) => castCompareString(b.toString, op, filteredThat)
+      case SimpleNull => castCompareString("", op, filteredThat)
     }
   }
 

@@ -1,6 +1,6 @@
 package de.envisia.gr.lang
 
-import de.envisia.gr.lang.SimpleVar.{ SimpleNull, SimpleNumber, SimpleString }
+import de.envisia.gr.lang.SimpleVar.{ SimpleBoolean, SimpleNull, SimpleNumber, SimpleString }
 import org.scalatest.{ MustMatchers, OptionValues, WordSpec }
 
 import scala.util.{ Failure, Success }
@@ -17,7 +17,8 @@ class GrLangCompilerSpec extends WordSpec with MustMatchers with OptionValues {
     "lba" -> SimpleString("-"),
     "other1" -> SimpleNumber(0),
     "other2" -> SimpleNull,
-    "execution" -> SimpleString("ML2")
+    "execution" -> SimpleString("ML2"),
+    "bruder" -> SimpleBoolean(false),
   )
   private val compiler = new GrLangInterpreter(lookupMap)
 
@@ -48,6 +49,19 @@ class GrLangCompilerSpec extends WordSpec with MustMatchers with OptionValues {
     }
     "do not give an error if a variable is unknown" in {
       compiler.compile(""" unknownVar == null """) mustBe Success(true)
+    }
+    "unary" in {
+      compiler.compile("""not bruder == true""") mustBe Success(true)
+    }
+    "multiple nested things" in {
+      compiler.compile("""other1 == null and ((bruder == false or other1 == null) and (other2 != null))""") mustBe Success(false)
+    }
+    "test gte" in {
+      compiler.compile("""5 >= 4 and 5 >= 5""") mustBe Success(true)
+    }
+    "test lte" in {
+      compiler.compile("""5 <= 10""") mustBe Success(true)
+      compiler.compile("""5 <= 5""") mustBe Success(true)
     }
   }
 
