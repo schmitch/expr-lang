@@ -10,7 +10,10 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
   import Ast._
 
   private def lookupVar(name: Identifier): SimpleVar = {
-    lookupMap.getOrElse(name.name, throw new IllegalArgumentException(s"invalid variable ${name.name}"))
+    // lookup a var in our lookup map,
+    // if it is not found we simple return a "null" instance
+    // (i.e. undefined and null are equal in our dsl)
+    lookupMap.getOrElse(name.name, SimpleVar.SimpleNull)
   }
 
   private def simpleVarBool(variable: SimpleVar): Boolean = {
@@ -28,6 +31,7 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
 
   private def compareResolve(any: Ast.Expr): SimpleVar = {
     any match {
+      case Expr.Null => SimpleVar.SimpleNull
       case Expr.Num(anyNum) => SimpleVar.SimpleNumber(BigDecimal(anyNum.toString))
       case Expr.Str(name) => SimpleVar.SimpleString(name)
       case Expr.Boolean(value) => SimpleVar.SimpleBoolean(value)
@@ -76,9 +80,9 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
   def compile(s: String): Try[Boolean] = {
     val parser = new GrParser(s)
     parser.InputLine.run() match {
-      case Success(expr) ⇒ Try(resolve(expr).result)
-      case Failure(e: ParseError) ⇒ Failure(new Exception("Expression is not valid: " + parser.formatError(e, new ErrorFormatter(showPosition = false))))
-      case Failure(e) ⇒ Failure(new Exception("Unexpected error during parsing run: ", e))
+      case Success(expr) => Try(resolve(expr).result)
+      case Failure(e: ParseError) => Failure(new Exception("Expression is not valid: " + parser.formatError(e, new ErrorFormatter(showPosition = false))))
+      case Failure(e) => Failure(new Exception("Unexpected error during parsing run: ", e))
     }
 
   }

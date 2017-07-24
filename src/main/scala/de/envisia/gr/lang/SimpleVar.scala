@@ -6,14 +6,26 @@ sealed trait SimpleVar {
 
   import SimpleVar._
 
+  private def filterNull(s: String): String = {
+    // our dsl will actually interpret -, 0 and empty strings as the same "null" value
+    // this makes it easy for us to compare things against our runtime data
+    s match {
+      case "-" => ""
+      case "0" => ""
+      case _ => s
+    }
+  }
+
   private def stringComp(left: String, op: Comparator, right: String): Boolean = {
+    val leftChecked = filterNull(left)
+    val rightChecked = filterNull(right)
     op match {
-      case Comparator.Eq => left == right
-      case Comparator.NotEq => left != right
-      case Comparator.Lt => left < right
-      case Comparator.LtE => left <= right
-      case Comparator.Gt => left > right
-      case Comparator.GtE => left >= right
+      case Comparator.Eq => leftChecked == rightChecked
+      case Comparator.NotEq => leftChecked != rightChecked
+      case Comparator.Lt => leftChecked < rightChecked
+      case Comparator.LtE => leftChecked <= rightChecked
+      case Comparator.Gt => leftChecked > rightChecked
+      case Comparator.GtE => leftChecked >= rightChecked
     }
   }
 
