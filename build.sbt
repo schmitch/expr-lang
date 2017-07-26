@@ -1,6 +1,6 @@
 import sbtrelease.ReleaseStateTransformations._
 
-organization in ThisBuild := "de.envisia.erp.dsl"
+organization in ThisBuild := "de.envisia.erp"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.2",
@@ -17,7 +17,7 @@ lazy val commonSettings = Seq(
   publishTo := Some("envisia-internal" at "https://nexus.envisia.de/repository/internal/")
 )
 
-lazy val `erp-dsl` = (project in file("."))
+lazy val `expression-dsl` = (project in file("."))
     .settings(commonSettings)
     .settings(
       libraryDependencies ++= Seq(
