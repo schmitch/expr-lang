@@ -13,9 +13,11 @@ sealed trait SimpleVar {
       case SimpleString(s) => s match {
         case "-" => SimpleVar.SimpleNull
         case "0" => SimpleVar.SimpleNull
+        case "false" => SimpleVar.SimpleNull
         case _ => v
       }
       case SimpleNumber(n) => if (n == BigDecimal(0)) SimpleVar.SimpleNull else v
+      case SimpleBoolean(b) => if (!b) SimpleVar.SimpleNull else v
       case _ => v
     }
   }
