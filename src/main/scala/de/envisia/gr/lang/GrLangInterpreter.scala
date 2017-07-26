@@ -81,14 +81,22 @@ class GrLangInterpreter(lookupMap: Map[String, SimpleVar]) {
     }
   }
 
+  def analyze(s: String): Try[Unit] = {
+    val parser = new GrParser(s)
+    parser.InputLine.run() match {
+      case Success(expr) => Try(resolve(expr).result)
+      case Failure(e: ParseError) => Failure(e)
+      case Failure(e) => Failure(new GrUnexpectedError(e))
+    }
+  }
+
   def compile(s: String): Try[Boolean] = {
     val parser = new GrParser(s)
     parser.InputLine.run() match {
       case Success(expr) => Try(resolve(expr).result)
       case Failure(e: ParseError) => Failure(new Exception("Expression is not valid: " + parser.formatError(e, new ErrorFormatter(showPosition = false))))
-      case Failure(e) => Failure(new Exception("Unexpected error during parsing run: ", e))
+      case Failure(e) => Failure(new GrUnexpectedError(e))
     }
-
   }
 
 }
