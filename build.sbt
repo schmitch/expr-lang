@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   ),
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  publishTo := Some("envisia-internal" at "https://nexus.envisia.de/repository/internal/")
+  publishTo := Some("envisia-internal" at "https://nexus.envisia.io/repository/internal/")
 )
 
 lazy val `expression-dsl` = (project in file("."))
