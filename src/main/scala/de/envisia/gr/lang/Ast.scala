@@ -6,7 +6,7 @@ private[lang] object Ast {
   type string = String
   type bool = Boolean
 
-  sealed trait Expr
+  trait Expr
   sealed trait FuncArg extends Expr
   object Expr {
     case class BoolOp(op: Ast.BoolOp, values: Seq[Expr]) extends Expr

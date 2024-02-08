@@ -14,7 +14,7 @@ private[lang] class GrParser(val input: ParserInput) extends Parser with StringB
   import CharPredicate.{ Alpha, Digit, Digit19, HexDigit }
   import GrParser._
   import de.envisia.gr.lang.Ast.{ Identifier => EID, _ }
-  import shapeless._
+  import support.hlist._
 
   def InputLine: Rule[HNil, ::[Expr, HNil]] = rule { Test ~ EOI }
 
@@ -35,7 +35,11 @@ private[lang] class GrParser(val input: ParserInput) extends Parser with StringB
   private def Integer = rule { optional('-') ~ (Digit19 ~ Digits | Digit) }
   private def Digits = rule { oneOrMore(Digit) }
   private def Frac = rule { "." ~ Digits }
-  private def Number = rule { capture(Integer ~ optional(Frac)) ~> Expr.Num }
+  private def Number: Rule[HNil, Ast.Expr.Num :: HNil] = {
+    rule {
+      capture(Integer ~ optional(Frac)) ~> (n => Expr.Num(n))
+    }
+  }
 
   // Boolean
   private def strToBool(s: String): Boolean = {
@@ -64,7 +68,7 @@ private[lang] class GrParser(val input: ParserInput) extends Parser with StringB
   )
   private def Characters = rule { zeroOrMore(NormalChar | '\\' ~ EscapedChar) }
   private def LiteralUnwrapped = rule { '"' ~ clearSB() ~ Characters ~ '"' ~ push(sb.toString) }
-  private def Literal = rule { LiteralUnwrapped ~> Expr.Str }
+  private def Literal: Rule[HNil, Ast.Expr.Str :: HNil] = rule { LiteralUnwrapped ~> ((s: String) => Expr.Str(s)) }
 
   // CompOps
   private def NotEq = rule { capture("!=") ~> (_ => Comparator.NotEq) }
@@ -79,12 +83,16 @@ private[lang] class GrParser(val input: ParserInput) extends Parser with StringB
 
   private def Comparsion = rule { (Expression ~ WhiteSpace ~ CompOp ~ WhiteSpace ~ Expression) ~> ((v1, v2, v3) => Expr.Compare(v1, v2, v3)) }
 
+  private def ComparsionFunc = rule { Comparsion ~> (v => Expr.UnaryOp(UnaryOp.Not, v)) }
+
+
   // Expressions
-  private def NotTest: Rule[HNil, ::[Expr, HNil]] = rule { quiet("not") ~ WhiteSpace ~ Comparsion ~> (v => Expr.UnaryOp(UnaryOp.Not, v)) | Comparsion | "(" ~ Test ~ ")" }
   private def AndTest = rule { oneOrMore(NotTest).separatedBy(kw("and")) ~> (v => if (v.length == 1) v.head else Expr.BoolOp(BoolOp.And, v)) }
   private def OrTest = rule { oneOrMore(AndTest).separatedBy(kw("or")) ~> (v => if (v.length == 1) v.head else Expr.BoolOp(BoolOp.Or, v)) }
 
   private def ZeroOrWhiteSpace = rule { quiet(zeroOrMore(WhiteSpaceChar.named("Whitespace"))) }
   private def Test: Rule[HNil, ::[Expr, HNil]] = rule { ZeroOrWhiteSpace ~ OrTest ~ ZeroOrWhiteSpace }
+  private def NotTest: Rule[HNil, ::[Expr, HNil]] = rule { quiet("not") ~ WhiteSpace ~ Comparsion ~> (v => Expr.UnaryOp(UnaryOp.Not, v)) | Comparsion | "(" ~ Test ~ ")" }
+
 
 }

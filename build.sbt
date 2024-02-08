@@ -1,10 +1,10 @@
-import sbtrelease.ReleaseStateTransformations._
+import ReleaseTransformations.*
 
-organization in ThisBuild := "de.envisia.erp"
+ThisBuild / organization := "de.envisia.erp"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.2",
-  scalacOptions in(Compile, doc) ++= Seq(
+  scalaVersion := "3.3.1",
+  Compile /  doc / scalacOptions ++= Seq(
     "-target:jvm-1.8",
     "-deprecation",
     "-encoding", "UTF-8",
@@ -21,13 +21,13 @@ lazy val `expression-dsl` = (project in file("."))
     .settings(commonSettings)
     .settings(
       libraryDependencies ++= Seq(
-        "org.parboiled" %% "parboiled" % "2.1.4",
-        "org.scalatest" %% "scalatest" % "3.0.3" % Test
+        "org.parboiled" %% "parboiled" % "2.5.1",
+        "org.scalatest" %% "scalatest" % "3.2.17" % Test
       )
     )
 
 
-releaseCrossBuild := true
+releasePublishArtifactsAction := PgpKeys.publishSigned.value
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
@@ -36,9 +36,8 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  ReleaseStep(action = Command.process("publishSigned", _), enableCrossBuild = true),
+  publishArtifacts,
   setNextVersion,
   commitNextVersion,
   pushChanges
 )
-

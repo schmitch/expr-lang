@@ -1,11 +1,13 @@
 package de.envisia.gr.lang
 
-import de.envisia.gr.lang.SimpleVar.{ SimpleBoolean, SimpleNull, SimpleNumber, SimpleString }
-import org.scalatest.{ MustMatchers, OptionValues, WordSpec }
+import de.envisia.gr.lang.SimpleVar.{SimpleBoolean, SimpleNull, SimpleNumber, SimpleString}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
-import scala.util.{ Failure, Success }
+import scala.util.Success
 
-class GrLangCompilerSpec extends WordSpec with MustMatchers with OptionValues {
+class GrLangCompilerSpec extends AnyWordSpec with Matchers with OptionValues {
 
   private val lookupMap = Map(
     // other
@@ -45,7 +47,7 @@ class GrLangCompilerSpec extends WordSpec with MustMatchers with OptionValues {
       compiler.compile(""" other1 == null and demo == "abc" and (other2 != null or execution == "ML2" or execution == "ML4")""") mustBe Success(true)
     }
     "give an error if we try an inner comparsion 0 < 1 < 2" in {
-      compiler.compile("0 < 1 < 2") mustBe 'failure
+      compiler.compile("0 < 1 < 2") mustBe Symbol("failure")
     }
     "do not give an error if a variable is unknown" in {
       compiler.compile(""" unknownVar == null """) mustBe Success(true)

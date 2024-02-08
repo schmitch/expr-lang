@@ -1,11 +1,13 @@
 package de.envisia.gr.lang
 
-import de.envisia.gr.lang.SimpleVar.{ SimpleBoolean, SimpleNull, SimpleNumber, SimpleString }
-import org.scalatest.{ MustMatchers, OptionValues, WordSpec }
+import de.envisia.gr.lang.SimpleVar.{SimpleBoolean, SimpleNull, SimpleNumber, SimpleString}
+import org.scalatest.OptionValues
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 
 import scala.util.Success
 
-class GrLangCompiler2Spec extends WordSpec with MustMatchers with OptionValues {
+class GrLangCompiler2Spec extends AnyWordSpec with Matchers with OptionValues {
 
   private val lookupMap = Map(
     // other
